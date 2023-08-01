@@ -8,12 +8,11 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
 from flask import Flask,jsonify
-
+import datetime as dt
 #################################################
 # Database Setup
-engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///Desktop/sqlalchemy-challenge/Resources/hawaii.sqlite")
 #################################################
-
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -47,6 +46,7 @@ def welcome():
         f"/api/v1.0/tobs<br/>"
         f"/api/v1.0/<start><br/>"
         f"/api/v1.0/<start>/<end><br/>"
+        f"Please enter the start date/end date in the format of MMDDYY"
             )
 
 @app.route("/api/v1.0/precipitation")
@@ -73,12 +73,28 @@ def tobs_analysis():
     lastyear=dt.date(2017,8,23)-dt.timedelta(days=365)
     sel = [measurement.station,measurement.tobs]
     most_active=session.query(measurement.station).group_by(measurement.station).order_by(func.count(measurement.station).desc()).first()[0]
-    print(most_active)
     tobs=session.query(measurement.tobs).filter(measurement.station==most_active).filter(measurement.date>=lastyear).all()
     session.close()
     tobs = list(np.ravel(tobs))
     return jsonify(tobs=tobs)
 
+
+@app.route("/api/v1.0/<start>")
+def start_analysis(start):
+    startdate_entered=dt.datetime.strptime(start,"%m%d%Y")
+    startdate=session.query(func.min(measurement.tobs),func.max(measurement.tobs),func.avg(measurement.tobs)).filter(measurement.date>=startdate_entered).all()
+    session.close()
+    startlist= list(np.ravel(startdate))
+    return jsonify(startlist=startlist)
+
+@app.route("/api/v1.0/<start>/<end>")
+def start_end_analysis(start,end):
+    startdate_entered=dt.datetime.strptime(start,"%m%d%Y")
+    enddate_entered=dt.datetime.strptime(end,"%m%d%Y")
+    start_end=session.query(func.min(measurement.tobs),func.max(measurement.tobs),func.avg(measurement.tobs)).filter(measurement.date>=startdate_entered).filter(measurement.date<=enddate_entered).all()
+    session.close()
+    start_end= list(np.ravel(start_end))
+    return jsonify(start_end=start_end)
 
 if __name__=="__main__":
     app.run()
