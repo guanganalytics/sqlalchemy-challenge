@@ -47,7 +47,7 @@ def welcome():
         f"/api/v1.0/start<br/>"
         f"/api/v1.0/start/end<br/>"
         f"Please enter the start date/end date in the format of MMDDYYYY"
-            )
+        )
 
 @app.route("/api/v1.0/precipitation")
 def precipitation_analysis():
